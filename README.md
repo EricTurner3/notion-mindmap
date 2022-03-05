@@ -3,6 +3,7 @@
 Framework for developing and visualizing mind maps in notion.
 
 ### **WORK IN PROGRESS** - Forked from [here](https://github.com/davidAmiron/notion-mindmap) on 4 Mar 2022
+* While this initially was a fork, everything here has been scrapped and completely redone. Only the original name remains
 
 ## Setup
 1. Clone this project and install prereqs, preferably in a venv and run `pip install -r requirements.txt`

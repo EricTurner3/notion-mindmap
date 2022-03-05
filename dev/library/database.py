@@ -42,12 +42,27 @@ def create_db(db, pages):
         db.execute("""
             CREATE TABLE PAGE_PARENT (
                 id VARCHAR(40),
-                parent_id VARCHAR(40),
-                parent_type VARCHAR(15)
+                parent_id VARCHAR(40) NULL,
+                parent_type VARCHAR(15) 
             );
         """)
     print('* Schema loaded. Populating data from db.json (this may take awhile)...')
-        # iterate over the pages and load them into the db
+    # iterate over the pages and load them into the db
+    load_db(db, pages)
+
+# helper function for inserting records 
+def insert_db(db, sql, data):
+    cur = db.cursor()
+    cur.execute(sql, data)
+    db.commit()
+    return cur.lastrowid
+
+def load_db (db, pages):
+    pd_s = 0 # track successes for PAGE
+    pd_e = 0 # track errors for PAGE
+
+    ppd_s = 0 # track successes for PAGE_PARENT
+    ppd_e = 0 # track errors for PAGE_PARENT
 
     for page in pages:
         #from pprint import pprint
@@ -55,4 +70,45 @@ def create_db(db, pages):
         p_id = page['id']
         # title can be in one of several places depending on page type
         title = fetch_page_title(page)
+        created_time = page['created_time']
+        last_edited_time = page['last_edited_time']
+        type = page['object']
+        url = page['url']
+        parent_type = page['parent']['type']
+        parent_id = None
+        # if it is the top of the hierarchy, workspace, it will not have a parent_id
+        # so only check for other cases
+        if not parent_type == 'workspace':
+            parent_id = page['parent'][parent_type]
+        
         print('** Importing {} - {}'.format(p_id, title))
+        # package them up for insert
+        page_data = [p_id, title, created_time, last_edited_time, type, url]
+        sql = '''
+            INSERT INTO PAGE VALUES(?, ?, ?, ?, ?, ?)
+        '''
+        pd = insert_db(db, sql, page_data)
+        if pd:
+            pd_msg = 'Success'
+            pd_s += 1
+        else:
+            pd_msg = 'FAILED'
+            pd_e += 1
+        print('*** Imported into PAGE - {}'.format(pd_msg))
+
+        parent_page_data = [p_id, parent_id, parent_type]
+        sql = '''
+            INSERT INTO PAGE_PARENT VALUES(?, ?, ?)
+        '''
+        ppd = insert_db(db, sql, parent_page_data)
+        if pd:
+            ppd_msg = 'Success'
+            ppd_s += 1
+        else:
+            pd_msg = 'FAILED'
+            ppd_e += 1
+        print('*** Imported into PAGE_PARENT - {}'.format(ppd_msg))
+        
+    print('* Import completed into notion.db!')
+    print('** PAGE table: Success - {} / Error - {}'.format(pd_s, pd_e))
+    print('** PAGE_PARENT table: Success - {} / Error - {}'.format(ppd_s, ppd_e))
