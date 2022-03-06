@@ -1,3 +1,7 @@
+'''
+    Methods for the SQLite3 version of the database
+'''
+
 from pprint import pprint
 
 def fetch_page_title(page):
@@ -108,7 +112,7 @@ def load_db (db, pages):
             pd_msg = 'FAILED'
             ppd_e += 1
         print('*** Imported into PAGE_PARENT - {}'.format(ppd_msg))
-        
+
     print('* Import completed into notion.db!')
     print('** PAGE table: Success - {} / Error - {}'.format(pd_s, pd_e))
     print('** PAGE_PARENT table: Success - {} / Error - {}'.format(ppd_s, ppd_e))
